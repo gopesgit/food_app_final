@@ -30,9 +30,7 @@ const renderOrderDetail = (details, discount_amount, delivery_fees, status_resta
   return (
     <View>
       <View style={styles.statusContainer}>
-        <Text style={styles.statusText}>
-          Status From Restaurant: {status_restaurant === 'pending' ? "Waiting...." : null}
-        </Text>
+     
       </View>
       <View style={styles.table}>
         <View style={styles.tableHeader}>
@@ -66,13 +64,13 @@ const renderOrderDetail = (details, discount_amount, delivery_fees, status_resta
 
 const OrderListScreen = () => {
   const navigation = useNavigation();
-  const { order, getOrderList } = useContext(UserContext); // Assume refreshOrders is provided by context
+  const { order, getOrderList } = useContext(UserContext);
   const [orders, setOrders] = useState(order || []);
   const [expandedOrder, setExpandedOrder] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [filter, setFilter] = useState('all');
   const { user } = useContext(AuthContext);
 
-  // Refresh handler
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
@@ -83,6 +81,11 @@ const OrderListScreen = () => {
       setRefreshing(false);
     }
   }, [user.email]);
+
+  const filteredOrders = orders.filter(item => {
+    if (filter === 'all') return true;
+    return item.status_restaurant === filter;
+  });
 
   const renderOrder = ({ item }) => (
     <View style={styles.orderCard}>
@@ -97,45 +100,47 @@ const OrderListScreen = () => {
         </TouchableOpacity>
       </View>
       <Pressable onPress={() => setExpandedOrder(expandedOrder === item.id ? null : item.id)}>
-        <Text style={styles.orderStatusText}>
-          {item.status_restaurant === 'pending' && item.status_delivery === 'pending' && item.status_payment === 'pending' ?
-            "Order has not been accepted by the restaurant." :
-            item.status_restaurant === 'accept' && item.status_delivery === 'pending' && item.status_payment === 'pending' ?
-              "Order is accepted by the restaurant but not yet delivered." :
-              item.status_restaurant === 'delivery' && item.status_delivery === 'pending' && item.status_payment === 'pending' ?
-                "Order is prepared and ready for delivery." :
-                item.status_restaurant === 'accept' && item.status_delivery === 'accept' && item.status_payment === 'pending' ?
-                  "Order is accepted and ready for delivery." :
-                  item.status_restaurant === 'delivery' && item.status_delivery === 'accept' && item.status_payment === 'pending' ?
-                    "Order is being delivered." :
-                    item.status_restaurant === 'delivery' && item.status_delivery === 'delivery' && item.status_payment === 'pending' ?
-                      "Order is delivered but payment is pending" :
-                      item.status_restaurant === 'delivery' && item.status_delivery === 'delivery' && item.status_payment === 'paid' ?
-                        "Order is delivered and payment is completed." :
+        <View style={styles.orderStatusContainer}>
+          <Text style={styles.orderStatusText}>
+            {item.status_restaurant === 'pending' && item.status_delivery === 'pending' && item.status_payment === 'pending' ?
+              "Order has not been accepted by the restaurant." :
+              item.status_restaurant === 'accept' && item.status_delivery === 'pending' && item.status_payment === 'pending' ?
+                "Order is accepted by the restaurant but not yet delivered." :
+                item.status_restaurant === 'delivery' && item.status_delivery === 'pending' && item.status_payment === 'pending' ?
+                  "Order is prepared and ready for delivery." :
+                  item.status_restaurant === 'accept' && item.status_delivery === 'accept' && item.status_payment === 'pending' ?
+                    "Order is accepted and ready for delivery." :
+                    item.status_restaurant === 'delivery' && item.status_delivery === 'accept' && item.status_payment === 'pending' ?
+                      "Order is being delivered." :
+                      item.status_restaurant === 'delivery' && item.status_delivery === 'delivery' && item.status_payment === 'pending' ?
+                        "Order is delivered but payment is pending" :
+                        item.status_restaurant === 'delivery' && item.status_delivery === 'delivery' && item.status_payment === 'paid' ?
+                          "Order is delivered and payment is completed." :
 
-                        item.status_restaurant === 'pending' && item.status_delivery === 'pending' && item.status_payment === 'paid' ?
-                          "Order has not been accepted by the restaurant and payment is completed." :
-                          item.status_restaurant === 'accept' && item.status_delivery === 'pending' && item.status_payment === 'paid' ?
-                            "Order is accepted by the restaurant but not yet delivered." :
-                            item.status_restaurant === 'delivery' && item.status_delivery === 'pending' && item.status_payment === 'paid' ?
-                              "Order is prepared and ready for delivery." :
-                              item.status_restaurant === 'accept' && item.status_delivery === 'accept' && item.status_payment === 'paid' ?
-                                "Order is accepted and ready for delivery." :
-                                item.status_restaurant === 'delivery' && item.status_delivery === 'accept' && item.status_payment === 'paid' ?
-                                  "Order is being delivered." :
-                                  item.status_restaurant === 'delivery' && item.status_delivery === 'delivery' && item.status_payment === 'paid' ?
-                                    "Order is delivered but payment is pending" : "Unknown status combination."
-
-          }
-        </Text>
-        <View style={[styles.orderHeader, styles.expandButton, { justifyContent: 'space-between' }]}>
-          <Text style={styles.orderTime}>{formatDate(item.created_at)}</Text>
-          <Text style={[styles.status, { color: getStatusColor(item.status_restaurant) }]}>
-            {getStatusText(item.status_restaurant)}
+                          item.status_restaurant === 'pending' && item.status_delivery === 'pending' && item.status_payment === 'paid' ?
+                            "Order has not been accepted by the restaurant and payment is completed." :
+                            item.status_restaurant === 'accept' && item.status_delivery === 'pending' && item.status_payment === 'paid' ?
+                              "Order is accepted by the restaurant but not yet delivered." :
+                              item.status_restaurant === 'delivery' && item.status_delivery === 'pending' && item.status_payment === 'paid' ?
+                                "Order is prepared and ready for delivery." :
+                                item.status_restaurant === 'accept' && item.status_delivery === 'accept' && item.status_payment === 'paid' ?
+                                  "Order is accepted and ready for delivery." :
+                                  item.status_restaurant === 'delivery' && item.status_delivery === 'accept' && item.status_payment === 'paid' ?
+                                    "Order is being delivered." :
+                                    item.status_restaurant === 'delivery' && item.status_delivery === 'delivery' && item.status_payment === 'paid' ?
+                                      "Order is delivered but payment is pending" : "Unknown status combination."
+            }
           </Text>
-          <TouchableOpacity onPress={() => setExpandedOrder(expandedOrder === item.id ? null : item.id)}>
-            <Icon name={expandedOrder === item.id ? 'chevron-up' : 'chevron-down'} type='material-community' size={24} color="#333" />
-          </TouchableOpacity>
+         
+          <View style={[styles.orderHeader,{justifyContent:'space-evenly',marginTop:2,borderRadius:2}]}>
+            <Text style={styles.orderTime}>{formatDate(item.created_at)}</Text>
+            <Text style={[styles.status, { color: getStatusColor(item.status_restaurant) }]}>
+              {getStatusText(item.status_restaurant)}
+            </Text>
+            <TouchableOpacity onPress={() => setExpandedOrder(expandedOrder === item.id ? null : item.id)}>
+              <Icon name={expandedOrder === item.id ? 'chevron-up' : 'chevron-down'} type='material-community' size={24} color="#333" />
+            </TouchableOpacity>
+          </View>
         </View>
       </Pressable>
       <Collapsible collapsed={expandedOrder !== item.id}>
@@ -172,9 +177,23 @@ const OrderListScreen = () => {
         <Icon name="mic" type="material" size={24} color="#888" />
       </View>
 
+      <View style={styles.filterContainer}>
+        <TouchableOpacity style={[styles.filterButton, filter === 'pending' && styles.activeFilter]} onPress={() => setFilter('pending')}>
+          <Text style={styles.filterText}>Pending</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.filterButton, filter === 'accept' && styles.activeFilter]} onPress={() => setFilter('accept')}>
+          <Text style={styles.filterText}>Accepted</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.filterButton, filter === 'delivery' && styles.activeFilter]} onPress={() => setFilter('delivery')}>
+          <Text style={styles.filterText}>Delivery</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.filterButton, filter === 'all' && styles.activeFilter]} onPress={() => setFilter('all')}>
+          <Text style={styles.filterText}>All</Text>
+        </TouchableOpacity>
+      </View>
+
       <FlatList
-        data={orders.filter((item) =>
-          (item.status_restaurant === 'pending' || item.status_restaurant === 'delivery' || item.status_restaurant === 'accept'))}
+        data={filteredOrders}
         renderItem={renderOrder}
         keyExtractor={item => item.id.toString()}
         contentContainerStyle={styles.orderList}
@@ -182,7 +201,7 @@ const OrderListScreen = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#ff6347']} // Customize the color of the refresh indicator
+            colors={['#ff6347']}
           />
         }
       />
@@ -266,6 +285,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    paddingVertical: 10,
+    backgroundColor: '#fff',
+  },
+  filterButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 5,
+    backgroundColor: '#f1f1f1',
+  },
+  activeFilter: {
+    backgroundColor: '#ff6347',
+  },
+  filterText: {
+    fontSize: 14,
+    color: '#333',
+  },
   orderList: {
     paddingBottom: 20,
   },
@@ -286,7 +324,7 @@ const styles = StyleSheet.create({
   orderHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+   
   },
   restaurantImage: {
     width: 50,
@@ -362,6 +400,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
+  orderStatusContainer: {
+    marginBottom: 10,
+  },
   orderStatusText: {
     fontSize: 14,
     color: '#666',
@@ -398,18 +439,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#eee',
     padding: 5,
     borderRadius: 5,
-  },
-  expandButton: {
-    padding: 10,
-    borderRadius: 5,
-    backgroundColor: '#eee',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 2,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });
 
